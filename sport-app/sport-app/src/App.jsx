@@ -70,7 +70,7 @@ const firebaseConfig = {
   measurementId: "G-1BQGNJJ92N"
 };
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);  // <--- 錯誤就是因為找不到這一行！
+const auth = getAuth(app);
 const db = getFirestore(app);
 
 const appId = 'sport-match-v1';
