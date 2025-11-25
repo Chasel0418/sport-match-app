@@ -60,16 +60,20 @@ import {
 } from 'lucide-react';
 
 // --- Firebase Config & Initialization ---
-const firebaseConfig =  {
+const firebaseConfig = {
   apiKey: "AIzaSyAIagqREwYsgG5IeAfNhL6GfmO3pOBtD50",
   authDomain: "huddle-sport.firebaseapp.com",
   projectId: "huddle-sport",
   storageBucket: "huddle-sport.firebasestorage.app",
   messagingSenderId: "919311181590",
-  appId: "'sport-match-v1'",
+  appId: "1:919311181590:web:9925bdf94b73327ca29237",
   measurementId: "G-1BQGNJJ92N"
 };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);  // <--- 錯誤就是因為找不到這一行！
+const db = getFirestore(app);
 
+const appId = 'sport-match-v1';
 // --- Custom Sport Icons ---
 const BasketballIcon = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
