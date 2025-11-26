@@ -4,7 +4,6 @@ import {
   getAuth, 
   signInAnonymously, 
   onAuthStateChanged,
-  signInWithCustomToken,
   signOut
 } from 'firebase/auth';
 import { 
@@ -59,8 +58,8 @@ import {
   MessageSquare 
 } from 'lucide-react';
 
-// --- Firebase Config & Initialization ---
-const firebaseConfig =  {
+// --- 1. Firebase 設定 (您提供的正確資訊) ---
+const firebaseConfig = {
   apiKey: "AIzaSyAIagqREwYsgG5IeAfNhL6GfmO3pOBtD50",
   authDomain: "huddle-sport.firebaseapp.com",
   projectId: "huddle-sport",
@@ -69,6 +68,14 @@ const firebaseConfig =  {
   appId: "1:919311181590:web:9925bdf94b73327ca29237",
   measurementId: "G-1BQGNJJ92N"
 };
+
+// --- 2. 初始化 Firebase (全域變數) ---
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// 設定 App ID 用於資料庫路徑分類
+const appId = 'sport-match-v1';
 
 // --- Custom Sport Icons ---
 const BasketballIcon = ({ className }) => (
@@ -187,19 +194,12 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [isGuest, setIsGuest] = useState(true);
 
+  // 1. Authentication - Simplified for Production
   useEffect(() => {
-    const initAuth = async () => {
-      try {
-        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (error) {
-        console.error("Auth error:", error);
-      }
-    };
-    initAuth();
+    // 直接嘗試匿名登入
+    signInAnonymously(auth).catch((error) => {
+        console.error("Auth failed:", error);
+    });
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -211,12 +211,14 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  // 2. Fetch User Profile Logic
   useEffect(() => {
     if (!user) return;
+    
     const userRef = doc(db, 'artifacts', appId, 'public', 'data', 'users', user.uid);
     
     const unsubscribe = onSnapshot(userRef, (docSnap) => {
-      setLoading(false);
+      setLoading(false); // 載入完成
       if (docSnap.exists()) {
         const data = docSnap.data();
         setUserProfile(data);
@@ -225,11 +227,15 @@ export default function App() {
         setIsGuest(true);
         setUserProfile(null);
       }
-    }, (error) => console.error("Profile sync error", error));
+    }, (error) => {
+        console.error("Profile sync error", error);
+        setLoading(false);
+    });
 
     return () => unsubscribe();
   }, [user]);
 
+  // --- Navigation Handlers ---
   const checkAuth = () => {
     if (isGuest) {
       setCurrentView('auth_landing');
